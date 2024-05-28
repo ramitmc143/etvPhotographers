@@ -1,6 +1,7 @@
 import messaging from '@react-native-firebase/messaging';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
+import { onMessageListener, createNotificationChannel } from '../push_notification/notification';
 
 const getFcmToken = () => {
   const [fcmToken, setFcmToken] = useState(null);
@@ -15,7 +16,7 @@ const getFcmToken = () => {
       console.log('Authorization status:', authStatus);
       generateFcmToken();
     } else {
-        console.log('Permission denied', 'Notification permissions are required for this app to function properly.');
+      console.log('Permission denied', 'Notification permissions are required for this app to function properly.');
     }
   };
 
@@ -34,7 +35,7 @@ const getFcmToken = () => {
         console.log('Failed to get FCM token after retrying');
       }
     } catch (error) {
-        console.log('Error getting FCM token:', error);
+      console.log('Error getting FCM token:', error);
       if (error.code === 'messaging/unknown' && error.message.includes('PHONE_REGISTRATION_ERROR')) {
         console.log('Registration Error', 'Phone registration error occurred. Please check your device configuration and try again.');
       } else {
@@ -44,12 +45,15 @@ const getFcmToken = () => {
   };
 
   useEffect(() => {
+    createNotificationChannel(); // Create notification channel
     requestUserPermission();
     const unsubscribe = messaging().onTokenRefresh((token) => {
       console.log('FCM Token refreshed:', token);
       setFcmToken(token);
       // Save the new token to your server or local storage
     });
+
+    onMessageListener();
 
     return () => unsubscribe();
   }, []);

@@ -49,7 +49,7 @@ const Dashboard = ({route}) => {
   const navigation = useNavigation();
 
   const token = getFcmToken()
-  console.log('token:',token)
+  console.log('token----:',token)
 
   console.log('userLoginData of loginScreen', userLoginData.data.username);
 
