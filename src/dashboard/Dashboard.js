@@ -29,6 +29,8 @@ import {
 } from 'react-native-permissions';
 import AndroidOpenSettings from 'react-native-android-open-settings';
 import handle_Pr_Ab from '../handle_Pr_Ab/handle_Pr_Ab';
+import Geolocation from '@react-native-community/geolocation';
+import getFcmToken from '../fmc_token/getFcmToken';
 // import nineToOnePm from '../pr_ab/nineToOnePm';
 // import onePmToFivePm from '../pr_ab/onePmToFivePm';
 // import filterTodayPunchIns from '../filterTodayPunchIns/filterTodayPunchIns';
@@ -45,6 +47,9 @@ const Dashboard = ({route}) => {
   const [attendanceData, setAttendanceData] = useState({});
 
   const navigation = useNavigation();
+
+  const token = getFcmToken()
+  console.log('token:',token)
 
   console.log('userLoginData of loginScreen', userLoginData.data.username);
 
@@ -99,7 +104,7 @@ const Dashboard = ({route}) => {
       return () => {
         clearInterval(interValId);
       };
-    }, [employeeData]),
+    }, [])
   );
 
   const fetchData = async () => {
@@ -157,12 +162,27 @@ const Dashboard = ({route}) => {
               },
               {
                 text: 'OK',
+                // onPress: async () => {
+                //   // Open location settings if user agrees
+                //   await AndroidOpenSettings.locationSourceSettings();
+                //   navigation.navigate('camera', {
+                //     userLoginData: userLoginData,
+                //   });
+                // },
                 onPress: async () => {
-                  // Open location settings if user agrees
-                  await AndroidOpenSettings.locationSourceSettings();
-                  navigation.navigate('camera', {
-                    userLoginData: userLoginData,
-                  });
+                  if (Platform.OS === 'ios') {
+                    // Open app settings on iOS
+                    console.log('ios');
+                    await Geolocation.requestAuthorization();
+                    
+                  } else {
+                    // Open location settings on Android
+                    console.log('Android');
+                    AndroidOpenSettings.locationSourceSettings();
+                    navigation.navigate('camera', {
+                          userLoginData: userLoginData,
+                        });
+                  }
                 },
               },
             ],
