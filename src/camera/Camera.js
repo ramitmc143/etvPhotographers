@@ -105,6 +105,7 @@ const Camera = ({ route }) => {
             userLoginData: userLoginData,
           });
           Alert.alert('Success', 'You have punched successfully');
+          // console.log('You have punched successfully');
         } else {
           Alert.alert('Something went wrong in punch');
         }
