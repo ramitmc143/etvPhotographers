@@ -12,39 +12,64 @@ import React, {useState} from 'react';
 import Icons from 'react-native-vector-icons/EvilIcons';
 import Iconss from 'react-native-vector-icons/Feather';
 import Iconsss from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import handlePostApi from '../handlePostApi/handlePostApi';
+import getFcmToken from '../fcm_token/getFcmToken';
 
 const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [username , setUsername] = useState('3026059');
-  const [password , setPassword] = useState('Ramoji@2024');
+  const [username, setUsername] = useState('3026059');
+  const [password, setPassword] = useState('Ramoji@2024');
   const [userLoginData, setUserLoginData] = useState({});
+
+  
 
   const handleLoginApi = async () => {
     try {
-      const response = await fetch(`http://202.62.74.220/etvtracker/Api/getuserlogin?username=${username}&password=${password}`);
-       if(!response.ok) {
+      const response = await fetch(
+        `http://202.62.74.220/etvtracker/Api/getuserlogin?username=${username}&password=${password}`,
+      );
+      if (!response.ok) {
         Alert.alert('login failed. please try to login again');
-       };
+      }
 
-       const jsonData = await response.json();
-       setUserLoginData(jsonData);
-       
-     await  AsyncStorage.setItem('userLoginData',JSON.stringify(jsonData))
-       // user validation 
-       if (jsonData.data.username == username) {
-        navigation.navigate('Dashboard',{userLoginData:jsonData})
-        Alert.alert('loggedIn successfully')
-       } else {
+      const jsonData = await response.json();
+      setUserLoginData(jsonData);
+      console.log('jsonData:-',jsonData)
+
+      await AsyncStorage.setItem('userLoginData', JSON.stringify(jsonData));
+      // user validation
+      if (jsonData.data.username == username) {
+        Alert.alert('loggedIn successfully');
+        navigation.navigate('Dashboard', {userLoginData: jsonData});
+
+        // check if it's the first time the app is opened
+
+        const isFirstTie = await AsyncStorage.getItem('isFirstTime');
+
+        if (isFirstTie === null) {
+          // first time opening the app
+          await AsyncStorage.setItem('isFirstTime', 'true');
+          await handlePostApi(jsonData);
+        } else {
+          // Not the first time opening the app
+          const storedToken = await AsyncStorage.getItem('fcmToken');
+          const currentToken = await getFcmToken();
+
+          if (storedToken !== currentToken) {
+            await handlePostApi(jsonData);
+          }
+        }
+        // await handlePostApi();
+      } else {
         Alert.alert('username and password did not match');
-       }
+      }
     } catch (error) {
       console.log('Error fetching Data in handleLoginApi: ', error);
       // Alert.alert('sometthing went wrong in handleLoginApi. Please try again');
     }
-  }
+  };
 
   const navigation = useNavigation();
 
@@ -52,11 +77,10 @@ const LoginScreen = () => {
     setShowPassword(!showPassword);
   };
 
-
   return (
     <ScrollView
       style={{backgroundColor: '#000000', width: '100%', height: '100%'}}>
-      <View> 
+      <View>
         <View style={styles.squire}>
           <View style={styles.circle}>
             <Image
@@ -70,7 +94,11 @@ const LoginScreen = () => {
         <View style={styles.textInputField_Container}>
           <View style={styles.input_container}>
             <Text style={styles.label_text}>UserID</Text>
-            <TextInput style={styles.inputField} placeholder="enter username" onChangeText={Username => setUsername(Username) } />
+            <TextInput
+              style={styles.inputField}
+              placeholder="enter username"
+              onChangeText={Username => setUsername(Username)}
+            />
           </View>
           <View style={{height: 1, backgroundColor: '#FFFFFF'}} />
           <View style={styles.input_container}>
@@ -82,9 +110,8 @@ const LoginScreen = () => {
                   showPassword ? {width: '90%'} : {width: '85%'},
                 ]}
                 placeholder="enter password"
-                secureTextEntry= {showPassword ? false : true}
-                onChangeText={Password => setPassword(Password)}
-                ></TextInput>
+                secureTextEntry={showPassword ? false : true}
+                onChangeText={Password => setPassword(Password)}></TextInput>
               {showPassword ? (
                 <TouchableOpacity
                   onPress={handleIcons}
@@ -96,7 +123,7 @@ const LoginScreen = () => {
                   <Icons name="eye" size={40} color="#FFFFFF" />
                 </TouchableOpacity>
               )}
-            </View>
+            </View>   
           </View>
           <View style={{height: 1, backgroundColor: '#FFFFFF'}} />
         </View>
@@ -104,8 +131,6 @@ const LoginScreen = () => {
           <Text style={{color: '#FFFFFF', textAlign: 'center'}}>Log in</Text>
         </TouchableOpacity>
       </View>
-    
-
     </ScrollView>
   );
 };
@@ -154,7 +179,7 @@ const styles = StyleSheet.create({
     height: '60%',
     // height:100
     left: '22%',
-    top:"18%",
+    top: '18%',
     opacity: 0.9,
   },
   login: {
@@ -197,3 +222,4 @@ const styles = StyleSheet.create({
     marginTop: '4%',
   },
 });
+

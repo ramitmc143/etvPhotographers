@@ -45,6 +45,7 @@ const displayNotification = (notification) => {
     bigText: notification.body,
     playSound: true,
     soundName: 'default',
+    vibrate:true
   });
 };
 

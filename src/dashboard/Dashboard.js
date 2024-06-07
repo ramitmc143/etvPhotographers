@@ -30,7 +30,13 @@ import {
 import AndroidOpenSettings from 'react-native-android-open-settings';
 import handle_Pr_Ab from '../handle_Pr_Ab/handle_Pr_Ab';
 import Geolocation from '@react-native-community/geolocation';
-import getFcmToken from '../fmc_token/getFcmToken';
+import getFcmToken from '../fcm_token/getFcmToken';
+import deviceDetails from '../deviceDetails/DeviceDetails';
+import {
+  onMessageListener,
+  createNotificationChannel,
+} from '../push_notification/notification';
+
 // import nineToOnePm from '../pr_ab/nineToOnePm';
 // import onePmToFivePm from '../pr_ab/onePmToFivePm';
 // import filterTodayPunchIns from '../filterTodayPunchIns/filterTodayPunchIns';
@@ -48,42 +54,39 @@ const Dashboard = ({route}) => {
 
   const navigation = useNavigation();
 
-  const token = getFcmToken()
-  console.log('token----:',token)
-
   console.log('userLoginData of loginScreen', userLoginData.data.username);
 
-
-// backHandler action
+  // backHandler action
   React.useEffect(() => {
+    // onMessageListener();
+    // createNotificationChannel();
     const backAction = () => {
       Alert.alert(
-        "Hold on!",
-        "Are you sure you want to exit the app?",
+        'Hold on!',
+        'Are you sure you want to exit the app?',
         [
           {
-            text: "Cancel",
+            text: 'Cancel',
             onPress: () => null,
-            style: "cancel"
+            style: 'cancel',
           },
           {
-            text: "OK",
-            onPress: () => BackHandler.exitApp()
-          }
+            text: 'OK',
+            onPress: () => BackHandler.exitApp(),
+          },
         ],
-        { cancelable: true }
+        {cancelable: true},
       );
       return true;
     };
 
     const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      backAction
+      'hardwareBackPress',
+      backAction,
     );
 
     return () => backHandler.remove();
   }, []);
-
 
   useFocusEffect(
     React.useCallback(() => {
@@ -104,7 +107,7 @@ const Dashboard = ({route}) => {
       return () => {
         clearInterval(interValId);
       };
-    }, [])
+    }, []),
   );
 
   const fetchData = async () => {
@@ -174,14 +177,13 @@ const Dashboard = ({route}) => {
                     // Open app settings on iOS
                     console.log('ios');
                     await Geolocation.requestAuthorization();
-                    
                   } else {
                     // Open location settings on Android
                     console.log('Android');
                     AndroidOpenSettings.locationSourceSettings();
                     navigation.navigate('camera', {
-                          userLoginData: userLoginData,
-                        });
+                      userLoginData: userLoginData,
+                    });
                   }
                 },
               },
@@ -314,6 +316,8 @@ const Dashboard = ({route}) => {
   console.log('todayPunchData:-------', todayPunchData.length);
   console.log('attendanceData:-', attendanceData);
   console.log('employeeData:- ', employeeData.length);
+
+  
   return (
     <View>
       <ScrollView style={{}}>
