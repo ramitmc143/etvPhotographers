@@ -135,6 +135,30 @@ const Dashboard = ({route}) => {
     }
   };
 
+const handlePunchIos =async()=>{
+  Alert.alert(
+    'Location Permission Required',
+    'Please Turn on the location',
+    [
+      {
+        text: 'Cancel',
+        onPress: () => {},
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: async () => {
+          // Open location settings if user agrees
+          navigation.navigate('camera', {
+            userLoginData: userLoginData,
+          });
+        },
+      },
+    ],
+    {cancelable: false},
+  )
+}
+
   const handlePunch = async () => {
     setIsPunchDisabled(true);
     try {
@@ -681,7 +705,7 @@ const Dashboard = ({route}) => {
         style={{position: 'absolute', bottom: '5%', right: '45%', zIndex: 1}}>
         <TouchableOpacity
           onPress={() => {
-            handlePunch();
+            Platform.OS === 'ios' ? handlePunchIos() : handlePunch();
           }}
           disabled={isPunchDisabled}
           style={[

@@ -3,7 +3,7 @@ import React from 'react';
 const handle_Pr_Ab = async (username) => {
   try {
     const response = await fetch(
-      `http://202.62.74.220/etvtracker/Api/shiftAttendence?user_id=${username}`
+      `http://172.17.15.218/etvtracker/Api/shiftAttendence?user_id=${username}`
     );
 
     if (!response.ok) {
