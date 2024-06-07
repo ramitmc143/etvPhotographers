@@ -18,13 +18,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [username , setUsername] = useState('3026059');
+  const [username , setUsername] = useState('3027024');
   const [password , setPassword] = useState('Ramoji@2024');
   const [userLoginData, setUserLoginData] = useState({});
 
   const handleLoginApi = async () => {
     try {
-      const response = await fetch(`http://202.62.74.220/etvtracker/Api/getuserlogin?username=${username}&password=${password}`);
+      const response = await fetch(`http://172.17.15.218/etvtracker/Api/getuserlogin?username=${username}&password=${password}`);
        if(!response.ok) {
         Alert.alert('login failed. please try to login again');
        };

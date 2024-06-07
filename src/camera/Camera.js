@@ -9,12 +9,14 @@ import {
   StyleSheet,
   Modal,
   Alert,
+  Platform,
 } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import RNFS from 'react-native-fs';
 import { useNavigation } from '@react-navigation/native';
 import handlePunchApi from '../handlePunchApi/handlePunchApi';
 import IonIcon from 'react-native-vector-icons/Ionicons';
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
 const Camera = ({ route }) => {
   const cameraRef = useRef(null);
@@ -29,40 +31,57 @@ const Camera = ({ route }) => {
   }, []);
 
   const requestPermissions = async () => {
-    try {
-      const cameraPermission = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-        {
-          title: 'Camera Permission',
-          message: 'This app needs camera permission to capture photos.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
+    if (Platform.OS === 'android') {
+      try {
+        const cameraPermission = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission',
+            message: 'This app needs camera permission to capture photos.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
 
-      const storagePermission = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: 'Storage Permission',
-          message: 'This app needs storage permission to download the image.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
+        const storagePermission = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: 'Storage Permission',
+            message: 'This app needs storage permission to download the image.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
 
-      if (
-        cameraPermission === PermissionsAndroid.RESULTS.GRANTED &&
-        storagePermission === PermissionsAndroid.RESULTS.GRANTED
-      ) {
-        console.log('Permissions granted in requestPermissions of CameraScreen');
-      } else {
-        Alert.alert('Permissions denied', 'Camera and Storage permissions are required to use this feature.');
+        if (
+          cameraPermission === PermissionsAndroid.RESULTS.GRANTED &&
+          storagePermission === PermissionsAndroid.RESULTS.GRANTED
+        ) {
+          console.log('Permissions granted in requestPermissions of CameraScreen');
+        } else {
+          Alert.alert('Permissions denied', 'Camera and Storage permissions are required to use this feature.');
+        }
+      } catch (err) {
+        console.log('Error requesting permissions in requestPermissions of CameraScreen:', err);
+        Alert.alert('Failed to request permissions');
       }
-    } catch (err) {
-      console.log('Error requesting permissions in requestPermissions of CameraScreen:', err);
-      Alert.alert('Failed to request permissions');
+    } else {
+      try {
+        const cameraPermission = await check(PERMISSIONS.IOS.CAMERA);
+        const photoLibraryPermission = await check(PERMISSIONS.IOS.PHOTO_LIBRARY);
+
+        if (cameraPermission !== RESULTS.GRANTED) {
+          await request(PERMISSIONS.IOS.CAMERA);
+        }
+        if (photoLibraryPermission !== RESULTS.GRANTED) {
+          await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+        }
+      } catch (err) {
+        console.log('Error requesting permissions in requestPermissions of CameraScreen:', err);
+        Alert.alert('Failed to request permissions');
+      }
     }
   };
 
@@ -86,6 +105,7 @@ const Camera = ({ route }) => {
             userLoginData: userLoginData,
           });
           Alert.alert('Success', 'You have punched successfully');
+          // console.log('You have punched successfully');
         } else {
           Alert.alert('Something went wrong in punch');
         }
