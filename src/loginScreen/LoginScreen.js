@@ -56,7 +56,7 @@ const LoginScreen = () => {
   return (
     <ScrollView
       style={{backgroundColor: '#000000', width: '100%', height: '100%'}}>
-      <View>
+      <View> 
         <View style={styles.squire}>
           <View style={styles.circle}>
             <Image
