@@ -11,55 +11,55 @@ import {
 import React, {useState} from 'react';
 import Icons from 'react-native-vector-icons/EvilIcons';
 import Iconss from 'react-native-vector-icons/Feather';
-import Iconsss from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Formik} from 'formik';
+import * as Yup from 'yup';
 import handlePostApi from '../handlePostApi/handlePostApi';
 import getFcmToken from '../fcm_token/getFcmToken';
 
 const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [userLoginData, setUserLoginData] = useState({});
 
-  const handleLoginApi = async () => {
+  const navigation = useNavigation();
+
+  const handleLoginApi = async (values, {setSubmitting, setErrors}) => {
     try {
       const response = await fetch(
-        `http://202.62.74.220/etvtracker/Api/getuserlogin?username=${username}&password=${password}`,
+        `http://202.62.74.220/etvtracker/Api/getuserlogin?username=${values.username}&password=${values.password}`,
       );
-      if (!response.ok) {
-        Alert.alert('login failed. please try to login again');
-      } else if (
-        response === 'Invalid Username or Password' ||
-        'Invalid Password'
+
+      const errorText = await response.text();
+      let jsonData;
+
+      if (
+        !response.ok ||
+        errorText.includes('Invalid Password') ||
+        errorText.includes('Invalid Username or Password')
       ) {
-        setError('Invalid Username or Password');
-        setPassword('');
-        setUsername('');
+        setErrors({username: 'Invalid Username', password: 'Invalid Password'});
+        setSubmitting(false);
+        return;
+      } else {
+        jsonData = JSON.parse(errorText); // Parse JSON if response is OK
       }
 
-      const jsonData = await response.json();
       setUserLoginData(jsonData);
-      console.log('jsonData:-', jsonData);
+      console.log('jsonData:', jsonData);
 
       await AsyncStorage.setItem('userLoginData', JSON.stringify(jsonData));
-      // user validation
-      if (jsonData.data.username == username) {
-        Alert.alert('loggedIn successfully');
+
+      if (jsonData.data.username === values.username) {
+        Alert.alert('Logged in successfully');
         navigation.navigate('Dashboard', {userLoginData: jsonData});
 
-        // check if it's the first time the app is opened
+        const isFirstTime = await AsyncStorage.getItem('isFirstTime');
 
-        const isFirstTie = await AsyncStorage.getItem('isFirstTime');
-
-        if (isFirstTie === null) {
-          // first time opening the app
+        if (isFirstTime === null) {
           await AsyncStorage.setItem('isFirstTime', 'true');
           await handlePostApi(jsonData);
         } else {
-          // Not the first time opening the app
           const storedToken = await AsyncStorage.getItem('fcmToken');
           const currentToken = await getFcmToken();
 
@@ -67,17 +67,23 @@ const LoginScreen = () => {
             await handlePostApi(jsonData);
           }
         }
-        // await handlePostApi();
       } else {
-        Alert.alert('username and password did not match');
+        Alert.alert('Username and password did not match');
       }
     } catch (error) {
       console.log('Error fetching Data in handleLoginApi: ', error);
-      // Alert.alert('sometthing went wrong in handleLoginApi. Please try again');
+      Alert.alert('Something went wrong in handleLoginApi. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const navigation = useNavigation();
+  const validationSchema = Yup.object().shape({
+    username: Yup.number().required('Username is required'),
+    password: Yup.string()
+      .min(8, 'Password must be at least 8 characters')
+      .required('Password is required'),
+  });
 
   const handleIcons = () => {
     setShowPassword(!showPassword);
@@ -97,56 +103,81 @@ const LoginScreen = () => {
         </View>
         <View style={styles.triangle}></View>
         <Text style={styles.login}>Login</Text>
-        <View style={styles.textInputField_Container}>
-          <View style={styles.input_container}>
-            <Text style={styles.label_text}>UserID</Text>
-            <TextInput
-              style={styles.inputField}
-              placeholder="enter username"
-              value={username}
-              onChangeText={Username => setUsername(Username)}
-            />
-          </View>
-          <View style={{height: 1, backgroundColor: '#FFFFFF'}} />
-          <View style={styles.input_container}>
-            <Text style={styles.label_text}>Password</Text>
-            <View style={{flexDirection: 'row', justifyContent: 'flex-end'}}>
-              <TextInput
-                style={[
-                  styles.inputField,
-                  showPassword ? {width: '90%'} : {width: '85%'},
-                ]}
-                placeholder="enter password"
-                secureTextEntry={showPassword ? false : true}
-                value={password}
-                onChangeText={Password => setPassword(Password)}></TextInput>
+        <Formik
+          initialValues={{username: '', password: ''}}
+          validationSchema={validationSchema}
+          onSubmit={handleLoginApi}>
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            isSubmitting,
+          }) => (
+            <>
+              <View style={styles.textInputField_Container}>
+                <View style={styles.input_container}>
+                  <Text style={styles.label_text}>UserID</Text>
+                  <TextInput
+                    style={styles.inputField}
+                    placeholder="enter username"
+                    value={values.username}
+                    onChangeText={handleChange('username')}
+                    onBlur={handleBlur('username')}
+                  />
+                  {errors.username && touched.username && (
+                    <Text style={{color: 'red'}}>{errors.username}</Text>
+                  )}
+                </View>
+                <View style={{height: 1, backgroundColor: '#FFFFFF'}} />
+                <View style={styles.input_container}>
+                  <Text style={styles.label_text}>Password</Text>
+                  <View
+                    style={{flexDirection: 'row', justifyContent: 'flex-end'}}>
+                    <TextInput
+                      style={[
+                        styles.inputField,
+                        showPassword ? {width: '90%'} : {width: '85%'},
+                      ]}
+                      placeholder="enter password"
+                      secureTextEntry={!showPassword}
+                      value={values.password}
+                      onChangeText={handleChange('password')}
+                      onBlur={handleBlur('password')}
+                    />
+                    {showPassword ? (
+                      <TouchableOpacity
+                        onPress={handleIcons}
+                        style={{left: '-13%', top: '1%'}}>
+                        <Iconss name="eye-off" size={25} color="#FFFFFF" />
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity onPress={handleIcons}>
+                        <Icons name="eye" size={40} color="#FFFFFF" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {errors.password && touched.password && (
+                    <Text style={{color: 'red'}}>{errors.password}</Text>
+                  )}
+                </View>
+                <View style={{height: 1, backgroundColor: '#FFFFFF'}} />
+              </View>
 
-              {showPassword ? (
-                <TouchableOpacity
-                  onPress={handleIcons}
-                  style={{left: '-13%', top: '1%'}}>
-                  <Iconss name="eye-off" size={25} color="#FFFFFF" />
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity onPress={handleIcons}>
-                  <Icons name="eye" size={40} color="#FFFFFF" />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          <View style={{height: 1, backgroundColor: '#FFFFFF'}} />
-        </View>
-
-        <TouchableOpacity style={styles.login_button} onPress={handleLoginApi}>
-          <Text style={{color: '#FFFFFF', textAlign: 'center'}}>Log in</Text>
-        </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.login_button}
+                onPress={handleSubmit}
+                disabled={isSubmitting}>
+                <Text style={{color: '#FFFFFF', textAlign: 'center'}}>
+                  Log in
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </Formik>
       </View>
-      {error ? (
-        <View style={{top: '-23%'}}>
-          <Text style={{color: 'red', textAlign: 'center'}}>{error}</Text>
-        </View>
-      ) : null}
     </ScrollView>
   );
 };
@@ -155,12 +186,11 @@ export default LoginScreen;
 
 const styles = StyleSheet.create({
   shape_container: {
-    // height: 150,
     alignItems: 'center',
     justifyContent: 'center',
     margin: 10,
     overflow: 'hidden',
-    borderRadius: 10, // Adjust the radius as needed
+    borderRadius: 10,
   },
   triangle: {
     width: 0,
@@ -181,7 +211,6 @@ const styles = StyleSheet.create({
   },
   squire: {
     flex: 1,
-    //position: 'absolute',
     width: '100%',
     height: 400,
     backgroundColor: '#1E293B',
@@ -193,7 +222,6 @@ const styles = StyleSheet.create({
   logo: {
     width: '60%',
     height: '60%',
-    // height:100
     left: '22%',
     top: '18%',
     opacity: 0.9,
@@ -211,7 +239,6 @@ const styles = StyleSheet.create({
     top: '-20%',
   },
   inputField: {
-    // backgroundColor:"white",
     color: '#CCCCCC',
   },
   label_text: {
