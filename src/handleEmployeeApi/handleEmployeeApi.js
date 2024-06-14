@@ -3,7 +3,7 @@ import React from 'react'
 //http://172.17.15.218/etvtracker/Api/punch_uesrs_data
 const handleEmployeeApi = async (userName) => {40
  try {
-    const responseData = await fetch(`http://172.17.15.218/etvtracker/Api/userId_wise_data?user_id=${userName}`)
+    const responseData = await fetch(`http://202.62.74.220/etvtracker/Api/userId_wise_data?user_id=${userName}`)
 
     if (!responseData.ok) {
        console.log('Network response was not ok in handleEmployeeApi');

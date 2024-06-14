@@ -19,11 +19,10 @@ import getFcmToken from '../fcm_token/getFcmToken';
 
 const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [username , setUsername] = useState('3027024');
-  const [password , setPassword] = useState('Ramoji@2024');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [userLoginData, setUserLoginData] = useState({});
-
-  
 
   const handleLoginApi = async () => {
     try {
@@ -32,11 +31,18 @@ const LoginScreen = () => {
       );
       if (!response.ok) {
         Alert.alert('login failed. please try to login again');
+      } else if (
+        response === 'Invalid Username or Password' ||
+        'Invalid Password'
+      ) {
+        setError('Invalid Username or Password');
+        setPassword('');
+        setUsername('');
       }
 
       const jsonData = await response.json();
       setUserLoginData(jsonData);
-      console.log('jsonData:-',jsonData)
+      console.log('jsonData:-', jsonData);
 
       await AsyncStorage.setItem('userLoginData', JSON.stringify(jsonData));
       // user validation
@@ -97,6 +103,7 @@ const LoginScreen = () => {
             <TextInput
               style={styles.inputField}
               placeholder="enter username"
+              value={username}
               onChangeText={Username => setUsername(Username)}
             />
           </View>
@@ -111,7 +118,9 @@ const LoginScreen = () => {
                 ]}
                 placeholder="enter password"
                 secureTextEntry={showPassword ? false : true}
+                value={password}
                 onChangeText={Password => setPassword(Password)}></TextInput>
+
               {showPassword ? (
                 <TouchableOpacity
                   onPress={handleIcons}
@@ -123,14 +132,21 @@ const LoginScreen = () => {
                   <Icons name="eye" size={40} color="#FFFFFF" />
                 </TouchableOpacity>
               )}
-            </View>   
+            </View>
           </View>
+
           <View style={{height: 1, backgroundColor: '#FFFFFF'}} />
         </View>
+
         <TouchableOpacity style={styles.login_button} onPress={handleLoginApi}>
           <Text style={{color: '#FFFFFF', textAlign: 'center'}}>Log in</Text>
         </TouchableOpacity>
       </View>
+      {error ? (
+        <View style={{top: '-23%'}}>
+          <Text style={{color: 'red', textAlign: 'center'}}>{error}</Text>
+        </View>
+      ) : null}
     </ScrollView>
   );
 };
@@ -209,7 +225,7 @@ const styles = StyleSheet.create({
     height: '5%',
     justifyContent: 'center',
     backgroundColor: '#1E293B',
-    top: '-15%',
+    top: '-13%',
     left: '15%',
     borderRadius: 8,
   },
@@ -222,4 +238,3 @@ const styles = StyleSheet.create({
     marginTop: '4%',
   },
 });
-
