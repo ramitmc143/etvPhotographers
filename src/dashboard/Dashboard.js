@@ -36,10 +36,7 @@ import {
   onMessageListener,
   createNotificationChannel,
 } from '../push_notification/notification';
-
-// import nineToOnePm from '../pr_ab/nineToOnePm';
-// import onePmToFivePm from '../pr_ab/onePmToFivePm';
-// import filterTodayPunchIns from '../filterTodayPunchIns/filterTodayPunchIns';
+import Today_date_and_time from '../today_date_and_time/Today_date_and_time';
 
 const Dashboard = ({route}) => {
   const {userLoginData} = route.params || {};
@@ -51,15 +48,17 @@ const Dashboard = ({route}) => {
   const [startIndex, setStartIndex] = useState(0);
   const [todayPunchData, setTodayPunchData] = useState([]);
   const [attendanceData, setAttendanceData] = useState({});
+  const [todayDate, setTodayDate] = useState('')
 
   const navigation = useNavigation();
 
-  console.log('userLoginData of loginScreen', userLoginData.data.username);
+  console.log('userLoginData of loginScreen', userLoginData?.data?.username);
 
   // backHandler action
   React.useEffect(() => {
     // onMessageListener();
     // createNotificationChannel();
+   
     const backAction = () => {
       Alert.alert(
         'Hold on!',
@@ -87,6 +86,14 @@ const Dashboard = ({route}) => {
 
     return () => backHandler.remove();
   }, []);
+
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     todayTime();
+  //   }, 1000);
+
+  //   return () => clearInterval(intervalId);
+  // }, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -189,13 +196,6 @@ const handlePunchIos =async()=>{
               },
               {
                 text: 'OK',
-                // onPress: async () => {
-                //   // Open location settings if user agrees
-                //   await AndroidOpenSettings.locationSourceSettings();
-                //   navigation.navigate('camera', {
-                //     userLoginData: userLoginData,
-                //   });
-                // },
                 onPress: async () => {
                   if (Platform.OS === 'ios') {
                     // Open app settings on iOS
@@ -204,10 +204,10 @@ const handlePunchIos =async()=>{
                   } else {
                     // Open location settings on Android
                     console.log('Android');
-                    AndroidOpenSettings.locationSourceSettings();
                     navigation.navigate('camera', {
                       userLoginData: userLoginData,
                     });
+                    AndroidOpenSettings.locationSourceSettings();
                   }
                 },
               },
@@ -218,18 +218,10 @@ const handlePunchIos =async()=>{
         }
       }
 
-      // Call handlePunchApi()
-      // await handlePunchApi(userLoginResponse);
-      // navigation.navigate('camera', {userLoginData: userLoginResponse});
-
       fetchData();
 
       // Hide loading icon
       setShowLoading(false);
-
-      // Update state to indicate successful punch
-      // setLastWeekData(true);
-      // Alert.alert('You have punched successfully');
     } catch (error) {
       console.log('Error while punching:', error);
       // Handle the error here, e.g., show an alert to the user
@@ -242,14 +234,22 @@ const handlePunchIos =async()=>{
     }
   };
 
-  const todayDate = new Date();
-  const dd = String(todayDate.getDate()).padStart(2, '0');
-  const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
-  const yyyy = todayDate.getFullYear();
-  const hours = String(todayDate.getHours()).padStart(2, '0');
-  const minutes = String(todayDate.getMinutes()).padStart(2, '0');
-  const seconds = String(todayDate.getSeconds()).padStart(2, '0');
-  const formattedDate = `${dd}-${mm}-${yyyy} ${hours}:${minutes}:${seconds}`;
+//  const todayTime = async () => {
+//  try {
+//   const todayDate = new Date();
+//   const dd = String(todayDate.getDate()).padStart(2, '0');
+//   const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
+//   const yyyy = todayDate.getFullYear();
+//   const hours = String(todayDate.getHours()).padStart(2, '0');
+//   const minutes = String(todayDate.getMinutes()).padStart(2, '0');
+//   const seconds = String(todayDate.getSeconds()).padStart(2, '0');
+//   const formattedDate = `${dd}-${mm}-${yyyy} ${hours}:${minutes}:${seconds}`;
+//   setTodayDate(formattedDate)
+//   return todayDate;
+//  } catch (error) {
+//   console.log('error in todayTime:-',error)
+//  }
+//  }
 
   const handleTodayPunch = async () => {
     try {
@@ -432,7 +432,8 @@ const handlePunchIos =async()=>{
               </Text>
               <Text
                 style={{color: '#FFFFFF', fontSize: 13, fontWeight: 'bold'}}>
-                Today - {formattedDate}
+                {/* Today - {todayDate} */}
+                <Today_date_and_time />
               </Text>
             </View>
 
@@ -702,7 +703,7 @@ const handlePunchIos =async()=>{
         </View>
       </ScrollView>
       <View
-        style={{position: 'absolute', bottom: '5%', right: '45%', zIndex: 1}}>
+        style={{position: 'absolute', bottom: '9%', right: '11%', zIndex: 1}}>
         <TouchableOpacity
           onPress={() => {
             Platform.OS === 'ios' ? handlePunchIos() : handlePunch();

@@ -8,7 +8,7 @@ const handlePunchApi = async (userLoginResponse ,dataUri ) => {
    console.log('storedPunchData:-',storedPunchData)
    
      
-    const url = 'http://172.17.15.218/etvtracker/Api/punch_data';
+    const url = 'http://etvhrms.com/etvtracker/Api/punch_data';
 
   try {
   const response =   await  fetch(url,{

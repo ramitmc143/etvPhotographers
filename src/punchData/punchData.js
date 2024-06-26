@@ -6,15 +6,18 @@ import recordPunch from '../recordPunch/recordPunchTime';
 const punchData = async (userLoginResponse, dataUri) => {
   try {
       const deviceData = await deviceDetails();
-      const deviceId = deviceData.device_id;
-      const deviceType = deviceData.device_type;
-      const locationName = deviceData.address;
-      const latitude = deviceData.latitude;
-      const longitude = deviceData.longitude;
+
+
+      console.log('deviceData of punchData:-',deviceData)
+      const deviceId = await deviceData.device_id;
+      const deviceType = await deviceData.device_type;
+      const locationName = await deviceData.address;
+      const latitude = await deviceData.latitude;
+      const longitude = await deviceData.longitude;
       const punchTime = await recordPunch();
-      const userName = userLoginResponse.data.name;
-      const Phone = userLoginResponse.data.phone;
-      const userId = userLoginResponse.data.username;
+      const userName = await userLoginResponse.data.name;
+      const Phone = await userLoginResponse.data.phone;
+      const userId =await userLoginResponse.data.username;
 
       const punchData = {
           device_id: deviceId,
@@ -26,6 +29,9 @@ const punchData = async (userLoginResponse, dataUri) => {
           phone_no: Phone,
           lattitude_longitude: `${latitude} , ${longitude}`,
           image_url: dataUri,
+          first_shift:'PR',
+          secound_shift:'AB'
+
       };
 
       return punchData;
